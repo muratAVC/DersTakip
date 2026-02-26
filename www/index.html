@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Ders Takip — Mergen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #4361EE;
+      --accent:  #FF6B6B;
+      --success: #2EC4B6;
+      --bg:      #F0F4FF;
+      --surface: #fff;
+      --text:    #1A1A2E;
+      --muted:   #8892B0;
+      --border:  #E0E6F7;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      background: var(--surface);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #4361EE, #7B97FF);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; flex-direction: column; gap: 1px; }
+    .header-title { color: #fff; font-size: 16px; font-weight: 900; line-height: 1; }
+    .header-author {
+      color: rgba(255,255,255,0.65);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .header-count {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 20px;
+      transition: opacity 0.2s;
+    }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      background: var(--surface);
+    }
+    .tab {
+      flex: 1; padding: 10px 8px; text-align: center;
+      font-size: 12px; font-weight: 800; color: var(--muted);
+      cursor: pointer; border-bottom: 3px solid transparent;
+      margin-bottom: -2px; transition: color 0.2s, border-color 0.2s;
+      user-select: none;
+    }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* ── PANELS ── */
+    .panel { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .panel.active { display: flex; }
+
+    /* ── FORM ── */
+    .form-section { padding: 8px 10px; border-bottom: 1.5px solid var(--border); }
+    .form-card {
+      background: var(--bg); border-radius: 10px;
+      padding: 8px; border: 1.5px solid var(--border);
+      transition: border-color 0.2s;
+    }
+    .form-card.editing { border-color: var(--success); background: #f0fefc; }
+    .edit-banner {
+      display: none; font-size: 10px; font-weight: 800;
+      color: var(--success); margin-bottom: 5px;
+    }
+    .form-card.editing .edit-banner { display: block; }
+
+    .row { display: flex; gap: 7px; margin-bottom: 7px; }
+    .field { display: flex; flex-direction: column; gap: 2px; }
+    .f1 { flex: 1; }
+    .f15 { flex: 1.5; }
+    .f2 { flex: 2; }
+
+    label {
+      font-size: 9px; font-weight: 800; color: var(--muted);
+      letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    input[type="text"], select {
+      padding: 7px 10px; border-radius: 7px;
+      border: 1.5px solid var(--border);
+      font-size: 13px; font-family: 'Nunito', sans-serif;
+      font-weight: 600; color: var(--text);
+      background: #fff; outline: none; width: 100%;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, select:focus { border-color: var(--primary); }
+    input[type="text"]::placeholder { color: #CBD5E1; }
+    select {
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892B0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+      cursor: pointer;
+    }
+
+    .btn-row { display: flex; gap: 6px; }
+    .btn {
+      flex: 1; padding: 8px; border: none; border-radius: 7px;
+      font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 900;
+      cursor: pointer; transition: transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-add    { background: var(--primary); color: #fff; }
+    .btn-save   { background: var(--success); color: #fff; }
+    .btn-cancel {
+      background: transparent; color: var(--muted);
+      border: 1.5px solid var(--border);
+      flex: 0 0 auto; padding: 8px 12px;
+    }
+
+    /* ── FİLTRE ── */
+    .filter-bar {
+      padding: 6px 10px;
+      border-bottom: 1.5px solid var(--border);
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 4px 11px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .filter-chip.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* ── LİSTE ── */
+    .list-section { flex: 1; padding: 8px 10px; overflow-y: auto; }
+    .empty-state { text-align: center; padding: 40px 10px; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .empty-icon  { font-size: 30px; margin-bottom: 6px; }
+
+    /* ── KART ── */
+    .card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card:active { opacity: 0.8; }
+    .card.active-edit { border-color: var(--success); background: #f0fefc; }
+
+    .card-badges { display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+    .badge {
+      padding: 3px 8px; border-radius: 5px;
+      font-size: 10px; font-weight: 800;
+      white-space: nowrap; text-align: center;
+    }
+    .badge-sinif { background: var(--primary); color: #fff; }
+    .badge-ders  { background: #EEF2FF; color: var(--primary); border: 1px solid #C7D2FE; }
+
+    .card-body { flex: 1; min-width: 0; }
+    .card-topic { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-date  { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+    .delete-btn {
+      background: #FFF0F0; color: var(--accent);
+      border: 1px solid #FFD5D5;
+      padding: 4px 9px; border-radius: 5px;
+      font-size: 11px; font-weight: 700;
+      cursor: pointer; font-family: 'Nunito', sans-serif; flex-shrink: 0;
+    }
+    .delete-btn:active { background: #FFE0E0; }
+
+    /* ── DERS PROGRAMI ── */
+    .program-panel {
+      flex: 1; display: flex; flex-direction: column;
+      padding: 10px; gap: 10px; overflow-y: auto;
+    }
+    .upload-area {
+      border: 2px dashed var(--border); border-radius: 12px;
+      padding: 24px 16px; text-align: center; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--bg); position: relative;
+    }
+    .upload-area:hover { border-color: var(--primary); background: #eaf0ff; }
+    .upload-area.has-image { border-style: solid; border-color: var(--primary); padding: 0; overflow: hidden; }
+    .upload-area input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%; border: none; padding: 0;
+    }
+    .upload-placeholder { pointer-events: none; }
+    .upload-icon  { font-size: 36px; margin-bottom: 8px; }
+    .upload-title { font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+    .upload-sub   { font-size: 11px; color: var(--muted); font-weight: 600; }
+    #programImg   { width: 100%; display: block; border-radius: 10px; }
+    .img-actions  { display: none; gap: 8px; }
+    .img-actions.visible { display: flex; }
+    .img-btn {
+      flex: 1; padding: 9px; border-radius: 8px;
+      font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800;
+      cursor: pointer; border: none;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+    }
+    .img-btn:active { transform: scale(0.97); }
+    .img-btn-change { background: var(--primary); color: #fff; }
+    .img-btn-delete { background: #FFF0F0; color: var(--accent); border: 1px solid #FFD5D5; }
+    .program-note {
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .program-note strong { color: var(--text); font-weight: 800; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 16px; left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--text); color: #fff;
+      padding: 9px 20px; border-radius: 50px;
+      font-size: 12px; font-weight: 700; z-index: 999;
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(3px);
+      z-index: 100; display: none;
+      align-items: flex-end; justify-content: center; padding: 16px;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: 16px;
+      padding: 20px; width: 100%; max-width: 400px;
+      animation: modalUp 0.2s ease;
+    }
+    @keyframes modalUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+    .modal-title { font-size: 16px; font-weight: 900; color: var(--text); margin-bottom: 4px; }
+    .modal-sub   { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 16px; }
+    .modal-btns  { display: flex; gap: 8px; }
+    .modal-btn   { flex: 1; padding: 12px; border-radius: 10px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; cursor: pointer; border: none; }
+    .modal-cancel  { background: var(--bg); color: var(--muted); border: 1.5px solid var(--border); }
+    .modal-confirm { background: var(--accent); color: #fff; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-title">📚 Ders Takip</div>
+      <div class="header-author">by M.AVCI</div>
+    </div>
+    <div class="header-count" id="countBadge">0 kayıt</div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" id="tab-konu"    onclick="switchTab('konu')">📝 Konu Takip</div>
+    <div class="tab"        id="tab-program" onclick="switchTab('program')">🗓️ Ders Programı</div>
+  </div>
+
+  <!-- PANEL: KONU TAKİP -->
+  <div class="panel active" id="panel-konu">
+
+    <!-- FORM -->
+    <div class="form-section">
+      <div class="form-card" id="formCard">
+        <div class="edit-banner">✏️ DÜZENLEME MODU</div>
+        <div class="row">
+          <div class="field f1">
+            <label>Sınıf</label>
+            <select id="sinif">
+              <option value="">Seç...</option>
+              <option value="9. Sınıf">9. Sınıf</option>
+              <option value="10. Sınıf">10. Sınıf</option>
+              <option value="11. Sınıf">11. Sınıf</option>
+              <option value="12. Sınıf">12. Sınıf</option>
+              <option value="Mezun">Mezun</option>
+            </select>
+          </div>
+          <div class="field f15">
+            <label>Derslik</label>
+            <input type="text" id="ders" placeholder="D3" maxlength="8" />
+          </div>
+          <div class="field f2">
+            <label>Konu</label>
+            <input type="text" id="konular" placeholder="Hücre Bölünmesi..." />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-add" id="mainBtn" onclick="kaydet()">➕ EKLE</button>
+          <button class="btn btn-cancel" id="cancelBtn" style="display:none" onclick="iptalDuzenle()">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FİLTRE -->
+    <div class="filter-bar" id="filterBar">
+      <div class="filter-chip active" onclick="setFilter('tumu')">Tümü</div>
+    </div>
+
+    <!-- LİSTE -->
+    <div class="list-section" id="liste"></div>
+  </div>
+
+  <!-- PANEL: DERS PROGRAMI -->
+  <div class="panel" id="panel-program">
+    <div class="program-panel">
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" accept="image/*" onchange="handleImage(event)" />
+        <div class="upload-placeholder" id="uploadPlaceholder">
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-title">Ders Programını Yükle</div>
+          <div class="upload-sub">Fotoğraf veya ekran görüntüsüne dokunun</div>
+        </div>
+        <img id="programImg" style="display:none" alt="Ders Programı" />
+      </div>
+      <div class="img-actions" id="imgActions">
+        <label class="img-btn img-btn-change" for="fileInput2">📷 Değiştir</label>
+        <input type="file" id="fileInput2" accept="image/*" style="display:none" onchange="handleImage(event)" />
+        <button class="img-btn img-btn-delete" onclick="resmiSil()">🗑️ Sil</button>
+      </div>
+      <div class="program-note">
+        <strong>📌 Değerli Kullanıcı</strong><br>
+        Kullandığınız bu uygulama ders anlattığınız sınıflarda anlattığınız son konuyu hatırlamak için yapıldı. Yapmanız gereken ilk kullanımda hangi sınıfa ders anlattı iseniz o sınıfın bilgilerini girip kaydetmek. Sonra derse girdiğiniz sınıfın üzerine tıklayınca gereken değişiklikleri yapabilirsiniz. Ders sonunda güncelle butonuna tıklamayı unutmayın :). Uygulama daha eksik akıllı 
+        <br> üretici Murat AVCI
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-title">🗑️ Notu Sil</div>
+    <div class="modal-sub">Bu notu silmek istediğine emin misin?</div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-cancel"  onclick="closeModal()">Vazgeç</button>
+      <button class="modal-btn modal-confirm" onclick="silOnay()">Evet, Sil</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const KEY_NOTLAR  = 'dersNotlari_v3';
+  const KEY_PROGRAM = 'dersProgramiResim';
+
+  let liste       = [];
+  let editIndex   = null;
+  let deleteIndex = null;
+  let aktifFiltre = 'tumu';
+
+  /* ── SEKMELER ── */
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-'   + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    document.getElementById('countBadge').style.opacity = tab === 'konu' ? '1' : '0';
+  }
+
+  /* ── TOAST ── */
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  /* ── STORAGE ── */
+  function yukle() {
+    try { liste = JSON.parse(localStorage.getItem(KEY_NOTLAR)) || []; }
+    catch(e) { liste = []; }
+    renderFiltreler();
+    render();
+  }
+  function saveNotlar() { localStorage.setItem(KEY_NOTLAR, JSON.stringify(liste)); }
+
+  /* ── FİLTRELER ── */
+  function siniflar() {
+    return [...new Set(liste.map(i => i.sinif))].sort();
+  }
+
+  function setFilter(sinif) {
+    aktifFiltre = sinif;
+    renderFiltreler();
+    render();
+  }
+
+  function renderFiltreler() {
+    const bar = document.getElementById('filterBar');
+    const tumSiniflar = siniflar();
+    bar.innerHTML = `<div class="filter-chip ${aktifFiltre === 'tumu' ? 'active' : ''}" onclick="setFilter('tumu')">Tümü</div>`;
+    tumSiniflar.forEach(s => {
+      bar.innerHTML += `<div class="filter-chip ${aktifFiltre === s ? 'active' : ''}" onclick="setFilter('${esc(s)}')">${esc(s)}</div>`;
+    });
+  }
+
+  /* ── KAYDET ── */
+  function kaydet() {
+    const sinif   = document.getElementById('sinif').value.trim();
+    const ders    = document.getElementById('ders').value.trim();
+    const konular = document.getElementById('konular').value.trim();
+    if (!sinif || !konular) { toast('⚠️ Sınıf ve konu zorunlu!'); return; }
+
+    if (editIndex !== null) {
+      liste[editIndex] = { ...liste[editIndex], sinif, ders, konular };
+      toast('✅ Güncellendi');
+      editIndex = null;
+    } else {
+      liste.push({ id: Date.now(), sinif, ders, konular, tarih: new Date().toLocaleDateString('tr-TR') });
+      toast('✅ Eklendi');
+    }
+    saveNotlar(); clearForm(); renderFiltreler(); render();
+  }
+
+  function duzenle(index) {
+    const item = liste[index];
+    document.getElementById('sinif').value   = item.sinif;
+    document.getElementById('ders').value    = item.ders || '';
+    document.getElementById('konular').value = item.konular;
+    editIndex = index;
+    document.getElementById('formCard').classList.add('editing');
+    document.getElementById('mainBtn').className   = 'btn btn-save';
+    document.getElementById('mainBtn').textContent = '💾 GÜNCELLE';
+    document.getElementById('cancelBtn').style.display = 'flex';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('konular').focus();
+    render();
+  }
+
+  function iptalDuzenle() { editIndex = null; clearForm(); render(); }
+
+  function clearForm() {
+    document.getElementById('sinif').value   = '';
+    document.getElementById('ders').value    = '';
+    document.getElementById('konular').value = '';
+    document.getElementById('formCard').classList.remove('editing');
+    document.getElementById('mainBtn').className   = 'btn btn-add';
+    document.getElementById('mainBtn').textContent = '➕ EKLE';
+    document.getElementById('cancelBtn').style.display = 'none';
+  }
+
+  /* ── SİL ── */
+  function openModal(index)  { deleteIndex = index; document.getElementById('overlay').classList.add('show'); }
+  function closeModal()      { document.getElementById('overlay').classList.remove('show'); deleteIndex = null; }
+  function silOnay() {
+    if (deleteIndex === null) return;
+    if (editIndex === deleteIndex) { editIndex = null; clearForm(); }
+    else if (editIndex !== null && editIndex > deleteIndex) editIndex--;
+    liste.splice(deleteIndex, 1);
+    saveNotlar(); renderFiltreler(); render(); closeModal();
+    toast('🗑️ Silindi');
+  }
+
+  /* ── RENDER ── */
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function render() {
+    const container = document.getElementById('liste');
+    const filtered  = aktifFiltre === 'tumu' ? liste : liste.filter(i => i.sinif === aktifFiltre);
+
+    document.getElementById('countBadge').textContent = liste.length + ' kayıt';
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div>${liste.length === 0 ? 'Henüz kayıt yok' : 'Bu sınıfa ait kayıt yok'}</div>`;
+      return;
+    }
+
+    // Gerçek index'i bulmak için
+    container.innerHTML = filtered.map(item => {
+      const i = liste.indexOf(item);
+      return `
+        <div class="card ${editIndex === i ? 'active-edit' : ''}" onclick="duzenle(${i})">
+          <div class="card-badges">
+            <div class="badge badge-sinif">${esc(item.sinif)}</div>
+            ${item.ders ? `<div class="badge badge-ders">${esc(item.ders)}</div>` : ''}
+          </div>
+          <div class="card-body">
+            <div class="card-topic">${esc(item.konular)}</div>
+            ${item.tarih ? `<div class="card-date">${item.tarih}</div>` : ''}
+          </div>
+          <button class="delete-btn" onclick="event.stopPropagation();openModal(${i})">Sil</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  /* ── DERS PROGRAMI ── */
+  function handleImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const dataUrl = ev.target.result;
+      try { localStorage.setItem(KEY_PROGRAM, dataUrl); }
+      catch(err) { toast('⚠️ Resim çok büyük!'); return; }
+      gosterResim(dataUrl);
+      toast('✅ Program kaydedildi');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
+  function gosterResim(dataUrl) {
+    document.getElementById('programImg').src          = dataUrl;
+    document.getElementById('programImg').style.display = 'block';
+    document.getElementById('uploadPlaceholder').style.display = 'none';
+    document.getElementById('uploadArea').classList.add('has-image');
+    document.getElementById('imgActions').classList.add('visible');
+  }
+
+  function resmiSil() {
+    localStorage.removeItem(KEY_PROGRAM);
+    document.getElementById('programImg').src          = '';
+    document.getElementById('programImg').style.display = 'none';
+    document.getElementById('uploadPlaceholder').style.display = 'block';
+    document.getElementById('uploadArea').classList.remove('has-image');
+    document.getElementById('imgActions').classList.remove('visible');
+    toast('🗑️ Program silindi');
+  }
+
+  /* ── INIT ── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter')  kaydet();
+    if (e.key === 'Escape') { iptalDuzenle(); closeModal(); }
+  });
+  document.getElementById('overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  yukle();
+  const saved = localStorage.getItem(KEY_PROGRAM);
+  if (saved) gosterResim(saved);
+</script>
+</body>
+</html>
