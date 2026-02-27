@@ -306,9 +306,9 @@
   <div class="header">
     <div class="header-left">
       <div class="header-title">📚 Ders Takip</div>
-      <div class="header-author">by M.AVCI</div>
+      <div class="header-author">by MAVCI</div>
     </div>
-    <div class="header-count" id="countBadge">0 kayıt</div>
+    <div class="header-count" id="syncBadge">⏳ Yükleniyor...</div>
   </div>
 
   <!-- TABS -->
@@ -338,7 +338,7 @@
           </div>
           <div class="field f15">
             <label>Derslik</label>
-            <input type="text" id="ders" placeholder="D3" maxlength="8" />
+            <input type="text" id="ders" placeholder="A101" maxlength="20" />
           </div>
           <div class="field f2">
             <label>Konu</label>
@@ -379,9 +379,8 @@
         <button class="img-btn img-btn-delete" onclick="resmiSil()">🗑️ Sil</button>
       </div>
       <div class="program-note">
-        <strong>📌 Değerli Kullanıcı</strong><br>
-        Kullandığınız bu uygulama ders anlattığınız sınıflarda anlattığınız son konuyu hatırlamak için yapıldı. Yapmanız gereken ilk kullanımda hangi sınıfa ders anlattı iseniz o sınıfın bilgilerini girip kaydetmek. Sonra derse girdiğiniz sınıfın üzerine tıklayınca gereken değişiklikleri yapabilirsiniz. Ders sonunda güncelle butonuna tıklamayı unutmayın :). Uygulama daha eksik akıllı 
-        <br> üretici Murat AVCI
+        <strong>📌 Önemli Hatırlatma</strong><br>
+        Bu uygulamacık çok sayıda sınıfa ders anlatan ve hangi sınıfta en son ne anlattığını unutan bir öğretmene yardım için yazıldı. İlk kullanımda sınıfı ve konuyu gir buluta kaydetsin bir daha unutma(tabiki kaydedersen). Güle Güle kullanın M.AVCI
       </div>
     </div>
   </div>
@@ -403,13 +402,17 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  const KEY_NOTLAR  = 'dersNotlari_v3';
+  /* ── JSONBin Ayarları ── */
+  const BIN_ID  = '69a00245ae596e708f4b4ef7';
+  const API_KEY = '$2a$10$.h.Eu9L2jETnYGXmqSpPK.I9KTeEoQklk/71.pIr.pMbRDxhoFWmO';
+  const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
   const KEY_PROGRAM = 'dersProgramiResim';
 
   let liste       = [];
   let editIndex   = null;
   let deleteIndex = null;
   let aktifFiltre = 'tumu';
+  let kayitBekliyor = false; // debounce için
 
   /* ── SEKMELER ── */
   function switchTab(tab) {
@@ -417,7 +420,7 @@
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.getElementById('tab-'   + tab).classList.add('active');
     document.getElementById('panel-' + tab).classList.add('active');
-    document.getElementById('countBadge').style.opacity = tab === 'konu' ? '1' : '0';
+    document.getElementById('syncBadge').style.opacity = tab === 'konu' ? '1' : '0';
   }
 
   /* ── TOAST ── */
@@ -425,17 +428,86 @@
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
+    setTimeout(() => t.classList.remove('show'), 2200);
   }
 
-  /* ── STORAGE ── */
-  function yukle() {
-    try { liste = JSON.parse(localStorage.getItem(KEY_NOTLAR)) || []; }
-    catch(e) { liste = []; }
+  /* ── DURUM GÖSTERGESI ── */
+  function setSync(durum) {
+    // durum: 'yukleniyor' | 'tamam' | 'hata'
+    const badge = document.getElementById('syncBadge');
+    if (durum === 'yukleniyor') {
+      badge.textContent = '⏳ Senkronize ediliyor...';
+      badge.style.background = 'rgba(255,255,255,0.15)';
+    } else if (durum === 'tamam') {
+      badge.textContent = '☁️ Buluta kaydedildi';
+      badge.style.background = 'rgba(46,196,182,0.3)';
+      setTimeout(() => {
+        badge.textContent = liste.length + ' kayıt';
+        badge.style.background = 'rgba(255,255,255,0.2)';
+      }, 2000);
+    } else if (durum === 'hata') {
+      badge.textContent = '⚠️ Bağlantı hatası';
+      badge.style.background = 'rgba(255,107,107,0.35)';
+      setTimeout(() => {
+        badge.textContent = liste.length + ' kayıt';
+        badge.style.background = 'rgba(255,255,255,0.2)';
+      }, 3000);
+    }
+  }
+
+  /* ── JSONBin OKUMA ── */
+  async function yukle() {
+    setSync('yukleniyor');
+    try {
+      const res = await fetch(BIN_URL + '/latest', {
+        headers: { 'X-Master-Key': API_KEY }
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      liste = data.record.notlar || [];
+    } catch(e) {
+      // İnternet yoksa localStorage yedekten yükle
+      try { liste = JSON.parse(localStorage.getItem('dersNotlariYedek')) || []; }
+      catch(_) { liste = []; }
+      toast('⚠️ Buluta bağlanılamadı, yerel veri yüklendi');
+    }
+    document.getElementById('syncBadge').textContent = liste.length + ' kayıt';
     renderFiltreler();
     render();
   }
-  function saveNotlar() { localStorage.setItem(KEY_NOTLAR, JSON.stringify(liste)); }
+
+  /* ── JSONBin YAZMA ── */
+  async function saveNotlar() {
+    // Yerel yedeği hemen güncelle
+    localStorage.setItem('dersNotlariYedek', JSON.stringify(liste));
+    // UI'ı hemen güncelle
+    document.getElementById('syncBadge').textContent = liste.length + ' kayıt';
+    renderFiltreler();
+    render();
+
+    if (kayitBekliyor) return;
+    kayitBekliyor = true;
+    setSync('yukleniyor');
+
+    // 600ms debounce — art arda işlemlerde tek istek atar
+    setTimeout(async () => {
+      kayitBekliyor = false;
+      try {
+        const res = await fetch(BIN_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': API_KEY
+          },
+          body: JSON.stringify({ notlar: liste })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        setSync('tamam');
+      } catch(e) {
+        setSync('hata');
+      }
+    }, 600);
+  }
 
   /* ── FİLTRELER ── */
   function siniflar() {
@@ -472,7 +544,8 @@
       liste.push({ id: Date.now(), sinif, ders, konular, tarih: new Date().toLocaleDateString('tr-TR') });
       toast('✅ Eklendi');
     }
-    saveNotlar(); clearForm(); renderFiltreler(); render();
+    clearForm();
+    saveNotlar();
   }
 
   function duzenle(index) {
@@ -510,7 +583,8 @@
     if (editIndex === deleteIndex) { editIndex = null; clearForm(); }
     else if (editIndex !== null && editIndex > deleteIndex) editIndex--;
     liste.splice(deleteIndex, 1);
-    saveNotlar(); renderFiltreler(); render(); closeModal();
+    saveNotlar();
+    closeModal();
     toast('🗑️ Silindi');
   }
 
@@ -521,14 +595,11 @@
     const container = document.getElementById('liste');
     const filtered  = aktifFiltre === 'tumu' ? liste : liste.filter(i => i.sinif === aktifFiltre);
 
-    document.getElementById('countBadge').textContent = liste.length + ' kayıt';
-
     if (filtered.length === 0) {
       container.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div>${liste.length === 0 ? 'Henüz kayıt yok' : 'Bu sınıfa ait kayıt yok'}</div>`;
       return;
     }
 
-    // Gerçek index'i bulmak için
     container.innerHTML = filtered.map(item => {
       const i = liste.indexOf(item);
       return `
@@ -547,7 +618,7 @@
     }).join('');
   }
 
-  /* ── DERS PROGRAMI ── */
+  /* ── DERS PROGRAMI (localStorage - resim büyük olduğu için) ── */
   function handleImage(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -564,7 +635,7 @@
   }
 
   function gosterResim(dataUrl) {
-    document.getElementById('programImg').src          = dataUrl;
+    document.getElementById('programImg').src = dataUrl;
     document.getElementById('programImg').style.display = 'block';
     document.getElementById('uploadPlaceholder').style.display = 'none';
     document.getElementById('uploadArea').classList.add('has-image');
@@ -573,7 +644,7 @@
 
   function resmiSil() {
     localStorage.removeItem(KEY_PROGRAM);
-    document.getElementById('programImg').src          = '';
+    document.getElementById('programImg').src = '';
     document.getElementById('programImg').style.display = 'none';
     document.getElementById('uploadPlaceholder').style.display = 'block';
     document.getElementById('uploadArea').classList.remove('has-image');
