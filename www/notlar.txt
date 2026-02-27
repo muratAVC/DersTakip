@@ -1,0 +1,1 @@
+ Bu uygulamacık çok sayıda sınıfa ders anlatan ve hangi sınıfta en son ne anlattığını unutan bir öğretmene yardım için yazıldı. İlk kullanımda sınıfı ve konuyu gir buluta kaydetsin bir daha unutma(tabiki kaydedersen). Güle Güle kullanın M.AVCI

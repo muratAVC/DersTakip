@@ -105,7 +105,7 @@
       font-size: 9px; font-weight: 800; color: var(--muted);
       letter-spacing: 0.5px; text-transform: uppercase;
     }
-    input[type="text"], select {
+    input[type="text"], input[type="number"], select {
       padding: 7px 10px; border-radius: 7px;
       border: 1.5px solid var(--border);
       font-size: 13px; font-family: 'Nunito', sans-serif;
@@ -113,8 +113,9 @@
       background: #fff; outline: none; width: 100%;
       transition: border-color 0.2s;
     }
-    input[type="text"]:focus, select:focus { border-color: var(--primary); }
-    input[type="text"]::placeholder { color: #CBD5E1; }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: var(--primary); }
+    input[type="text"]::placeholder,
+    input[type="number"]::placeholder { color: #CBD5E1; }
     select {
       appearance: none; -webkit-appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238892B0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
@@ -262,6 +263,174 @@
     }
     .program-note strong { color: var(--text); font-weight: 800; }
 
+    /* ── ÖĞRENCİ PANELİ ── */
+    .detay-panel {
+      position: fixed;
+      top: 0; left: 50%; transform: translateX(-50%) translateX(100%);
+      width: 100%; max-width: 430px;
+      height: 100vh;
+      background: var(--surface);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden;
+    }
+    .detay-panel.acik { transform: translateX(-50%) translateX(0); }
+
+    .detay-header {
+      background: linear-gradient(135deg, #4361EE, #7B97FF);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .geri-btn {
+      background: rgba(255,255,255,0.2);
+      border: none; color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px; font-weight: 800;
+      padding: 6px 12px; border-radius: 20px;
+      cursor: pointer; white-space: nowrap;
+    }
+    .geri-btn:active { opacity: 0.7; }
+    .detay-baslik { flex: 1; color: #fff; font-size: 15px; font-weight: 900; text-align: center; }
+    .detay-sil-btn {
+      background: rgba(255,107,107,0.25);
+      border: none; color: #fff;
+      font-size: 16px; padding: 6px 10px;
+      border-radius: 8px; cursor: pointer;
+    }
+
+    .detay-icerik { flex: 1; overflow-y: auto; padding: 12px; }
+
+    /* Bilgi Kartı */
+    .bilgi-kart {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      border: 1.5px solid var(--border);
+    }
+    .bilgi-kart-baslik {
+      font-size: 11px; font-weight: 900; color: var(--primary);
+      letter-spacing: 0.8px; text-transform: uppercase;
+      margin-bottom: 10px; display: flex;
+      align-items: center; justify-content: space-between;
+    }
+    .duzenle-link {
+      font-size: 11px; font-weight: 700; color: var(--primary);
+      cursor: pointer; text-decoration: underline;
+    }
+    .bilgi-satir {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .bilgi-satir:last-child { border-bottom: none; }
+    .bilgi-etiket { color: var(--muted); font-weight: 600; font-size: 12px; }
+    .bilgi-deger  { color: var(--text); font-weight: 700; }
+
+    /* Düzenleme formu */
+    .bilgi-form { display: none; }
+    .bilgi-form.aktif { display: block; }
+    .bilgi-form input[type="text"],
+    .bilgi-form input[type="number"],
+    .bilgi-form select {
+      margin-bottom: 6px;
+    }
+
+    /* Ders Ekle */
+    .ders-ekle-kart {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 1.5px solid var(--border);
+    }
+    .ders-ekle-baslik {
+      font-size: 11px; font-weight: 900; color: var(--primary);
+      letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 8px;
+    }
+
+    /* Ders kayıt kartı */
+    .ders-kayit {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      animation: fadeIn 0.2s ease;
+    }
+    .ders-kayit-ust {
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 8px;
+    }
+    .ders-kayit-bilgi { flex: 1; min-width: 0; }
+    .ders-kayit-tarih { font-size: 13px; font-weight: 800; color: var(--text); }
+    .ders-kayit-sure  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .ders-kayit-ucret { font-size: 13px; font-weight: 800; color: var(--primary); white-space: nowrap; }
+
+    .odeme-btn {
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 10px; font-weight: 800;
+      cursor: pointer; border: none;
+      font-family: 'Nunito', sans-serif;
+      transition: all 0.15s;
+    }
+    .odeme-btn.odendi   { background: #DCFCE7; color: #16A34A; border: 1px solid #BBF7D0; }
+    .odeme-btn.bekliyor { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+    .ders-kayit-sil {
+      background: none; border: none; color: var(--muted);
+      font-size: 14px; cursor: pointer; padding: 2px 4px;
+    }
+
+    /* Finansal Özet */
+    .finans-kart {
+      background: linear-gradient(135deg, #4361EE, #7B97FF);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    .finans-baslik { font-size: 11px; font-weight: 900; opacity: 0.75; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 12px; }
+    .finans-satirlar { display: flex; flex-direction: column; gap: 6px; }
+    .finans-satir { display: flex; justify-content: space-between; align-items: center; }
+    .finans-etiket { font-size: 12px; font-weight: 600; opacity: 0.85; }
+    .finans-deger  { font-size: 14px; font-weight: 900; }
+    .finans-deger.bekliyor { color: #FDE68A; }
+    .finans-deger.tahsil   { color: #6EE7B7; }
+    .finans-ayrac { border: none; border-top: 1px solid rgba(255,255,255,0.2); margin: 4px 0; }
+    .finans-toplam-etiket { font-size: 13px; font-weight: 800; }
+    .finans-toplam-deger  { font-size: 18px; font-weight: 900; }
+
+    /* Öğrenci liste kartı */
+    .og-kart {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      animation: fadeIn 0.2s ease;
+    }
+    .og-kart:active { opacity: 0.8; }
+    .og-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, #4361EE, #7B97FF);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 15px; font-weight: 900;
+      flex-shrink: 0;
+    }
+    .og-bilgi { flex: 1; min-width: 0; }
+    .og-ad   { font-size: 14px; font-weight: 800; color: var(--text); }
+    .og-meta { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .og-ok   { color: var(--muted); font-size: 16px; }
+
     /* ── TOAST ── */
     .toast {
       position: fixed; bottom: 16px; left: 50%;
@@ -306,15 +475,16 @@
   <div class="header">
     <div class="header-left">
       <div class="header-title">📚 Ders Takip</div>
-      <div class="header-author">by MAVCI</div>
+      <div class="header-author">by Mergen</div>
     </div>
     <div class="header-count" id="syncBadge">⏳ Yükleniyor...</div>
   </div>
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab active" id="tab-konu"    onclick="switchTab('konu')">📝 Konu Takip</div>
-    <div class="tab"        id="tab-program" onclick="switchTab('program')">🗓️ Ders Programı</div>
+    <div class="tab active" id="tab-konu"      onclick="switchTab('konu')">📝 Konu Takip</div>
+    <div class="tab"        id="tab-ogrenci"   onclick="switchTab('ogrenci')">👨‍🎓 Öğrenciler</div>
+    <div class="tab"        id="tab-program"   onclick="switchTab('program')">🗓️ Program</div>
   </div>
 
   <!-- PANEL: KONU TAKİP -->
@@ -361,6 +531,53 @@
     <div class="list-section" id="liste"></div>
   </div>
 
+  <!-- PANEL: ÖĞRENCİLER -->
+  <div class="panel" id="panel-ogrenci">
+
+    <!-- Öğrenci Ekle Formu -->
+    <div class="form-section">
+      <div class="form-card" id="ogFormCard">
+        <div class="row">
+          <div class="field f2">
+            <label>Ad Soyad</label>
+            <input type="text" id="ogAd" placeholder="Ayşe Kaya" maxlength="50" />
+          </div>
+          <div class="field f1">
+            <label>Sınıf</label>
+            <select id="ogSinif">
+              <option value="">Seç</option>
+              <option value="9. Sınıf">9. Sınıf</option>
+              <option value="10. Sınıf">10. Sınıf</option>
+              <option value="11. Sınıf">11. Sınıf</option>
+              <option value="12. Sınıf">12. Sınıf</option>
+              <option value="Mezun">Mezun</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-add" onclick="ogKaydet()">➕ ÖĞRENCİ EKLE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Öğrenci Listesi -->
+    <div class="list-section" id="ogListe"></div>
+  </div>
+
+  <!-- PANEL: ÖĞRENCİ DETAY (slide-in sayfa) -->
+  <div class="detay-panel" id="detayPanel">
+    <div class="detay-header">
+      <button class="geri-btn" onclick="detayKapat()">← Geri</button>
+      <div class="detay-baslik" id="detayBaslik">Öğrenci</div>
+      <button class="detay-sil-btn" onclick="ogSilModal()">🗑️</button>
+    </div>
+
+    <!-- Öğrenci Bilgi Kartı -->
+    <div class="detay-icerik" id="detayIcerik">
+      <!-- JS ile doldurulacak -->
+    </div>
+  </div>
+
   <!-- PANEL: DERS PROGRAMI -->
   <div class="panel" id="panel-program">
     <div class="program-panel">
@@ -380,7 +597,7 @@
       </div>
       <div class="program-note">
         <strong>📌 Önemli Hatırlatma</strong><br>
-        Bu uygulamacık çok sayıda sınıfa ders anlatan ve hangi sınıfta en son ne anlattığını unutan bir öğretmene yardım için yazıldı. İlk kullanımda sınıfı ve konuyu gir buluta kaydetsin bir daha unutma(tabiki kaydedersen). Güle Güle kullanın M.AVCI
+         Bu uygulamacık çok sayıda sınıfa ders anlatan ve hangi sınıfta en son ne anlattığını unutan bir öğretmene yardım için yazıldı. İlk kullanımda sınıfı ve konuyu gir buluta kaydetsin bir daha unutma(tabiki kaydedersen). Güle Güle kullanın M.AVCI
       </div>
     </div>
   </div>
@@ -390,11 +607,11 @@
 <!-- Modal -->
 <div class="overlay" id="overlay">
   <div class="modal">
-    <div class="modal-title">🗑️ Notu Sil</div>
-    <div class="modal-sub">Bu notu silmek istediğine emin misin?</div>
+    <div class="modal-title" id="modalBaslik">🗑️ Notu Sil</div>
+    <div class="modal-sub"   id="modalAciklama">Bu notu silmek istediğine emin misin?</div>
     <div class="modal-btns">
       <button class="modal-btn modal-cancel"  onclick="closeModal()">Vazgeç</button>
-      <button class="modal-btn modal-confirm" onclick="silOnay()">Evet, Sil</button>
+      <button class="modal-btn modal-confirm" id="modalOnayFn" data-fn="silOnay" onclick="modalOnay()">Evet, Sil</button>
     </div>
   </div>
 </div>
@@ -408,11 +625,16 @@
   const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
   const KEY_PROGRAM = 'dersProgramiResim';
 
-  let liste       = [];
-  let editIndex   = null;
-  let deleteIndex = null;
-  let aktifFiltre = 'tumu';
-  let kayitBekliyor = false; // debounce için
+  let liste        = [];
+  let ogrenciler   = [];
+  let editIndex    = null;
+  let deleteIndex  = null;
+  let aktifFiltre  = 'tumu';
+  let aktifTab     = 'konu';
+  let aktifOgId    = null;   // detay sayfasında görünen öğrenci id
+  let ogSilHedef   = null;
+  let dersSilHedef = null;
+  let kayitBekliyor = false;
 
   /* ── SEKMELER ── */
   function switchTab(tab) {
@@ -421,6 +643,7 @@
     document.getElementById('tab-'   + tab).classList.add('active');
     document.getElementById('panel-' + tab).classList.add('active');
     document.getElementById('syncBadge').style.opacity = tab === 'konu' ? '1' : '0';
+    aktifTab = tab;
   }
 
   /* ── TOAST ── */
@@ -439,7 +662,7 @@
       badge.textContent = '⏳ Senkronize ediliyor...';
       badge.style.background = 'rgba(255,255,255,0.15)';
     } else if (durum === 'tamam') {
-      badge.textContent = '☁️ Buluta kaydedildi';
+      badge.textContent = '☁️ Kaydedildi';
       badge.style.background = 'rgba(46,196,182,0.3)';
       setTimeout(() => {
         badge.textContent = liste.length + ' kayıt';
@@ -464,50 +687,49 @@
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      liste = data.record.notlar || [];
+      liste      = data.record.notlar    || [];
+      ogrenciler = data.record.ogrenciler || [];
     } catch(e) {
-      // İnternet yoksa localStorage yedekten yükle
-      try { liste = JSON.parse(localStorage.getItem('dersNotlariYedek')) || []; }
-      catch(_) { liste = []; }
+      try {
+        const yedek = JSON.parse(localStorage.getItem('tumVeriYedek')) || {};
+        liste      = yedek.notlar    || [];
+        ogrenciler = yedek.ogrenciler || [];
+      } catch(_) { liste = []; ogrenciler = []; }
       toast('⚠️ Buluta bağlanılamadı, yerel veri yüklendi');
     }
     document.getElementById('syncBadge').textContent = liste.length + ' kayıt';
     renderFiltreler();
     render();
+    ogRender();
   }
 
   /* ── JSONBin YAZMA ── */
-  async function saveNotlar() {
-    // Yerel yedeği hemen güncelle
-    localStorage.setItem('dersNotlariYedek', JSON.stringify(liste));
-    // UI'ı hemen güncelle
-    document.getElementById('syncBadge').textContent = liste.length + ' kayıt';
-    renderFiltreler();
-    render();
-
+  async function saveAll(renderUI = true) {
+    localStorage.setItem('tumVeriYedek', JSON.stringify({ notlar: liste, ogrenciler }));
+    if (renderUI) {
+      document.getElementById('syncBadge').textContent = liste.length + ' kayıt';
+      renderFiltreler();
+      render();
+    }
     if (kayitBekliyor) return;
     kayitBekliyor = true;
     setSync('yukleniyor');
-
-    // 600ms debounce — art arda işlemlerde tek istek atar
     setTimeout(async () => {
       kayitBekliyor = false;
       try {
         const res = await fetch(BIN_URL, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Master-Key': API_KEY
-          },
-          body: JSON.stringify({ notlar: liste })
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+          body: JSON.stringify({ notlar: liste, ogrenciler })
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         setSync('tamam');
-      } catch(e) {
-        setSync('hata');
-      }
+      } catch(e) { setSync('hata'); }
     }, 600);
   }
+
+  function saveNotlar() { return saveAll(true); }
+  function saveOgrenciler() { return saveAll(false); }
 
   /* ── FİLTRELER ── */
   function siniflar() {
@@ -576,8 +798,23 @@
   }
 
   /* ── SİL ── */
-  function openModal(index)  { deleteIndex = index; document.getElementById('overlay').classList.add('show'); }
-  function closeModal()      { document.getElementById('overlay').classList.remove('show'); deleteIndex = null; }
+  function openModal(index) {
+    deleteIndex = index;
+    document.getElementById('modalBaslik').textContent   = '🗑️ Notu Sil';
+    document.getElementById('modalAciklama').textContent = 'Bu notu silmek istediğine emin misin?';
+    document.getElementById('modalOnayFn').setAttribute('data-fn', 'silOnay');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('show');
+    deleteIndex = null; dersSilHedef = null;
+  }
+  function modalOnay() {
+    const fn = document.getElementById('modalOnayFn').getAttribute('data-fn');
+    if (fn === 'silOnay')     silOnay();
+    else if (fn === 'dersSilOnay') dersSilOnay();
+    else if (fn === 'ogSilOnay')   ogSilOnay();
+  }
   function silOnay() {
     if (deleteIndex === null) return;
     if (editIndex === deleteIndex) { editIndex = null; clearForm(); }
@@ -652,10 +889,241 @@
     toast('🗑️ Program silindi');
   }
 
+  /* ══════════════════════════════════════
+     ÖĞRENCİ MODÜLÜ
+  ══════════════════════════════════════ */
+
+  /* -- Öğrenci Ekle -- */
+  function ogKaydet() {
+    const ad    = document.getElementById('ogAd').value.trim();
+    const sinif = document.getElementById('ogSinif').value;
+    if (!ad || !sinif) { toast('⚠️ Ad soyad ve sınıf zorunlu!'); return; }
+    ogrenciler.push({ id: Date.now(), ad, sinif, adres: '', ucret: 0, dersler: [] });
+    document.getElementById('ogAd').value    = '';
+    document.getElementById('ogSinif').value = '';
+    saveOgrenciler();
+    ogRender();
+    toast('✅ Öğrenci eklendi');
+  }
+
+  /* -- Öğrenci Listesi Render -- */
+  function ogRender() {
+    const c = document.getElementById('ogListe');
+    if (!ogrenciler.length) {
+      c.innerHTML = '<div class="empty-state"><div class="empty-icon">👨‍🎓</div>Henüz öğrenci yok</div>';
+      return;
+    }
+    c.innerHTML = ogrenciler.map(og => {
+      const harf = og.ad ? og.ad[0].toUpperCase() : '?';
+      const sonDers = og.dersler && og.dersler.length
+        ? og.dersler[og.dersler.length - 1].tarih
+        : 'Ders yok';
+      const bekleyen = (og.dersler || []).filter(d => !d.odendi)
+        .reduce((t, d) => t + (d.ucret || 0), 0);
+      return `
+        <div class="og-kart" onclick="detayAc('${og.id}')">
+          <div class="og-avatar">${harf}</div>
+          <div class="og-bilgi">
+            <div class="og-ad">${esc(og.ad)}</div>
+            <div class="og-meta">${esc(og.sinif)} · Son ders: ${esc(sonDers)}${bekleyen > 0 ? ' · <span style="color:#D97706">₺' + bekleyen + ' bekliyor</span>' : ''}</div>
+          </div>
+          <div class="og-ok">›</div>
+        </div>`;
+    }).join('');
+  }
+
+  /* -- Öğrenci Detay Aç -- */
+  function detayAc(id) {
+    aktifOgId = id;
+    const og = ogrenciler.find(o => o.id == id);
+    if (!og) return;
+    document.getElementById('detayBaslik').textContent = og.ad;
+    document.getElementById('detayPanel').classList.add('acik');
+    detayRender(og);
+  }
+
+  function detayKapat() {
+    document.getElementById('detayPanel').classList.remove('acik');
+    aktifOgId = null;
+    ogRender();
+  }
+
+  /* -- Detay İçerik Render -- */
+  function detayRender(og) {
+    const dersler   = og.dersler || [];
+    const tahsil    = dersler.filter(d =>  d.odendi).reduce((t, d) => t + (d.ucret || 0), 0);
+    const bekleyen  = dersler.filter(d => !d.odendi).reduce((t, d) => t + (d.ucret || 0), 0);
+    const toplam    = tahsil + bekleyen;
+    const toplamSure = dersler.reduce((t, d) => t + (parseFloat(d.sure) || 0), 0);
+
+    document.getElementById('detayIcerik').innerHTML = `
+
+      <!-- FİNANSAL ÖZET -->
+      <div class="finans-kart">
+        <div class="finans-baslik">💰 Finansal Özet</div>
+        <div class="finans-satirlar">
+          <div class="finans-satir">
+            <span class="finans-etiket">Toplam Ders</span>
+            <span class="finans-deger">${dersler.length} ders / ${toplamSure} saat</span>
+          </div>
+          <hr class="finans-ayrac">
+          <div class="finans-satir">
+            <span class="finans-etiket">Tahsil Edildi</span>
+            <span class="finans-deger tahsil">₺${tahsil.toLocaleString('tr-TR')}</span>
+          </div>
+          <div class="finans-satir">
+            <span class="finans-etiket">Bekleyen</span>
+            <span class="finans-deger bekliyor">₺${bekleyen.toLocaleString('tr-TR')}</span>
+          </div>
+          <hr class="finans-ayrac">
+          <div class="finans-satir">
+            <span class="finans-toplam-etiket">Toplam Tutar</span>
+            <span class="finans-toplam-deger">₺${toplam.toLocaleString('tr-TR')}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ÖĞRENCİ BİLGİLERİ -->
+      <div class="bilgi-kart" id="bilgiKart">
+        <div class="bilgi-kart-baslik">
+          Öğrenci Bilgileri
+          <span class="duzenle-link" onclick="bilgiDuzenle()">Düzenle</span>
+        </div>
+        <div id="bilgiGoster">
+          <div class="bilgi-satir"><span class="bilgi-etiket">Ad Soyad</span><span class="bilgi-deger">${esc(og.ad)}</span></div>
+          <div class="bilgi-satir"><span class="bilgi-etiket">Sınıf</span><span class="bilgi-deger">${esc(og.sinif)}</span></div>
+          <div class="bilgi-satir"><span class="bilgi-etiket">Adres</span><span class="bilgi-deger">${esc(og.adres || '—')}</span></div>
+          <div class="bilgi-satir"><span class="bilgi-etiket">Saatlik Ücret</span><span class="bilgi-deger">${og.ucret ? '₺' + og.ucret : '—'}</span></div>
+        </div>
+        <div class="bilgi-form" id="bilgiForm">
+          <div class="row"><div class="field f2"><label>Ad Soyad</label><input type="text" id="bfAd" value="${esc(og.ad)}" /></div><div class="field f1"><label>Sınıf</label><select id="bfSinif"><option value="9. Sınıf" ${og.sinif=='9. Sınıf'?'selected':''}>9. Sınıf</option><option value="10. Sınıf" ${og.sinif=='10. Sınıf'?'selected':''}>10. Sınıf</option><option value="11. Sınıf" ${og.sinif=='11. Sınıf'?'selected':''}>11. Sınıf</option><option value="12. Sınıf" ${og.sinif=='12. Sınıf'?'selected':''}>12. Sınıf</option><option value="Mezun" ${og.sinif=='Mezun'?'selected':''}>Mezun</option></select></div></div>
+          <div class="row"><div class="field f2"><label>Adres</label><input type="text" id="bfAdres" value="${esc(og.adres||'')}" placeholder="Mahalle, İlçe..." /></div><div class="field f1"><label>Saatlik Ücret ₺</label><input type="number" id="bfUcret" value="${og.ucret||''}" placeholder="500" min="0" style="padding:7px 10px;border-radius:7px;border:1.5px solid var(--border);font-size:13px;font-family:Nunito,sans-serif;font-weight:600;color:var(--text);background:#fff;outline:none;width:100%;" /></div></div>
+          <div class="btn-row"><button class="btn btn-save" onclick="bilgiKaydet()">💾 Kaydet</button><button class="btn btn-cancel" onclick="bilgiIptal()">✕ İptal</button></div>
+        </div>
+      </div>
+
+      <!-- DERS EKLE -->
+      <div class="ders-ekle-kart">
+        <div class="ders-ekle-baslik">📅 Ders Kaydı Ekle</div>
+        <div class="row">
+          <div class="field f15"><label>Tarih</label><input type="text" id="dkTarih" placeholder="${new Date().toLocaleDateString('tr-TR')}" /></div>
+          <div class="field f1"><label>Saat</label><input type="text" id="dkSaat" placeholder="14:00" /></div>
+          <div class="field f1"><label>Süre (saat)</label><select id="dkSure"><option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option><option value="2.5">2.5</option><option value="3">3</option></select></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-add" onclick="dersEkle()">➕ DERS EKLE</button>
+        </div>
+        ${og.ucret ? '<div style="font-size:11px;color:var(--muted);margin-top:5px;font-weight:600;">Saatlik ücret: ₺' + og.ucret + ' — seçilen süreye göre otomatik hesaplanır</div>' : '<div style="font-size:11px;color:var(--accent);margin-top:5px;font-weight:600;">⚠️ Önce öğrenci bilgilerinden saatlik ücret girin</div>'}
+      </div>
+
+      <!-- DERS LİSTESİ -->
+      <div style="font-size:11px;font-weight:900;color:var(--primary);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;">Ders Geçmişi (${dersler.length})</div>
+      ${dersler.length === 0 ? '<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:24px">📅</div>Henüz ders kaydı yok</div>' :
+        [...dersler].reverse().map((d, ri) => {
+          const gercekIdx = dersler.length - 1 - ri;
+          return `<div class="ders-kayit">
+            <div class="ders-kayit-ust">
+              <div class="ders-kayit-bilgi">
+                <div class="ders-kayit-tarih">${esc(d.tarih)} ${d.saat ? '· ' + esc(d.saat) : ''}</div>
+                <div class="ders-kayit-sure">${d.sure} saat</div>
+              </div>
+              <div class="ders-kayit-ucret">₺${(d.ucret||0).toLocaleString('tr-TR')}</div>
+              <button class="odeme-btn ${d.odendi ? 'odendi' : 'bekliyor'}" onclick="odemeDegistir(${gercekIdx})">${d.odendi ? '✓ Ödendi' : '⏳ Bekliyor'}</button>
+              <button class="ders-kayit-sil" onclick="dersSilModal(${gercekIdx})">✕</button>
+            </div>
+          </div>`;
+        }).join('')
+      }
+      <div style="height:20px"></div>
+    `;
+  }
+
+  /* -- Bilgi Düzenle/Kaydet -- */
+  function bilgiDuzenle() {
+    document.getElementById('bilgiGoster').style.display = 'none';
+    document.getElementById('bilgiForm').classList.add('aktif');
+  }
+  function bilgiIptal() {
+    document.getElementById('bilgiGoster').style.display = 'block';
+    document.getElementById('bilgiForm').classList.remove('aktif');
+  }
+  function bilgiKaydet() {
+    const og = ogrenciler.find(o => o.id == aktifOgId);
+    if (!og) return;
+    og.ad    = document.getElementById('bfAd').value.trim()    || og.ad;
+    og.sinif = document.getElementById('bfSinif').value        || og.sinif;
+    og.adres = document.getElementById('bfAdres').value.trim();
+    og.ucret = parseFloat(document.getElementById('bfUcret').value) || 0;
+    document.getElementById('detayBaslik').textContent = og.ad;
+    saveOgrenciler();
+    detayRender(og);
+    toast('✅ Bilgiler güncellendi');
+  }
+
+  /* -- Ders Ekle -- */
+  function dersEkle() {
+    const og = ogrenciler.find(o => o.id == aktifOgId);
+    if (!og) return;
+    const tarih = document.getElementById('dkTarih').value.trim() || new Date().toLocaleDateString('tr-TR');
+    const saat  = document.getElementById('dkSaat').value.trim();
+    const sure  = parseFloat(document.getElementById('dkSure').value) || 1;
+    const ucret = (og.ucret || 0) * sure;
+    if (!og.dersler) og.dersler = [];
+    og.dersler.push({ id: Date.now(), tarih, saat, sure, ucret, odendi: false });
+    document.getElementById('dkTarih').value = '';
+    document.getElementById('dkSaat').value  = '';
+    saveOgrenciler();
+    detayRender(og);
+    toast('✅ Ders eklendi — ₺' + ucret);
+  }
+
+  /* -- Ödeme Durumu Değiştir -- */
+  function odemeDegistir(idx) {
+    const og = ogrenciler.find(o => o.id == aktifOgId);
+    if (!og || !og.dersler[idx]) return;
+    og.dersler[idx].odendi = !og.dersler[idx].odendi;
+    saveOgrenciler();
+    detayRender(og);
+  }
+
+  /* -- Ders Sil Modal -- */
+  function dersSilModal(idx) {
+    dersSilHedef = idx;
+    document.getElementById('modalBaslik').textContent  = '📅 Dersi Sil';
+    document.getElementById('modalAciklama').textContent = 'Bu ders kaydını silmek istediğine emin misin?';
+    document.getElementById('modalOnayFn').setAttribute('data-fn', 'dersSilOnay');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function dersSilOnay() {
+    const og = ogrenciler.find(o => o.id == aktifOgId);
+    if (!og || dersSilHedef === null) return;
+    og.dersler.splice(dersSilHedef, 1);
+    dersSilHedef = null;
+    saveOgrenciler();
+    closeModal();
+    detayRender(og);
+    toast('🗑️ Ders silindi');
+  }
+
+  /* -- Öğrenci Sil -- */
+  function ogSilModal() {
+    document.getElementById('modalBaslik').textContent  = '👨‍🎓 Öğrenciyi Sil';
+    document.getElementById('modalAciklama').textContent = 'Bu öğrenci ve tüm ders kayıtları silinecek. Emin misin?';
+    document.getElementById('modalOnayFn').setAttribute('data-fn', 'ogSilOnay');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function ogSilOnay() {
+    ogrenciler = ogrenciler.filter(o => o.id != aktifOgId);
+    saveOgrenciler();
+    closeModal();
+    detayKapat();
+    toast('🗑️ Öğrenci silindi');
+  }
+
   /* ── INIT ── */
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter')  kaydet();
-    if (e.key === 'Escape') { iptalDuzenle(); closeModal(); }
+    if (e.key === 'Enter' && aktifTab === 'konu') kaydet();
+    if (e.key === 'Escape') { iptalDuzenle(); closeModal(); detayKapat(); }
   });
   document.getElementById('overlay').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
