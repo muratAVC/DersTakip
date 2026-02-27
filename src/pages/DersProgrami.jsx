@@ -71,7 +71,7 @@ export default function DersProgrami() {
       {/* NOT */}
       <div className="bg-appbg border-[1.5px] border-border rounded-xl p-3 text-xs font-semibold text-muted leading-relaxed">
         <span className="text-textmain font-extrabold">📌 Önemli Hatırlatma</span><br />
-        Ders programı her dönem başında güncellenebilir. Değişiklik olması durumunda yeni programı yükleyerek eski programın üzerine yazabilirsiniz. Sorularınız için öğretmeninize veya okul idaresine başvurunuz.
+        Bu uygulamacık çok sayıda sınıfa ders anlatan ve hangi sınıfta en son ne anlattığını unutan bir öğretmene yardım için yazıldı. İlk kullanımda sınıfı ve konuyu gir buluta kaydetsin bir daha unutma(tabiki kaydedersen). Güle Güle kullanın M.AVCI
       </div>
 
       <Toast visible={toast.visible} msg={toast.msg} />
