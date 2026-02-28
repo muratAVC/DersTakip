@@ -1,133 +1,146 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react'
-import { fetchData, saveData, saveLocalBackup, loadLocalBackup } from '../services/jsonbin'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import {
+  supabase,
+  onAuthChange,
+  fetchNotlar, insertNot, updateNot, deleteNot,
+  fetchOgrenciler, insertOgrenci, updateOgrenci, deleteOgrenci,
+  insertDers, updateDers, deleteDers,
+} from '../services/supabase'
 
 // ─────────────────────────────────────────
-//  Global State — Context API
-//  Tüm sayfalarda erişilecek veriler burada
+//  Global State — Supabase + Auth + Realtime
 // ─────────────────────────────────────────
 
 const AppContext = createContext(null)
 
 export function AppProvider({ children }) {
+  const [user,       setUser]       = useState(undefined) // undefined = henüz bilinmiyor
   const [notlar,     setNotlar]     = useState([])
   const [ogrenciler, setOgrenciler] = useState([])
-  const [syncDurum,  setSyncDurum]  = useState('bos') // 'bos' | 'yukleniyor' | 'tamam' | 'hata'
+  const [yukleniyor, setYukleniyor] = useState(false)
+  const [syncDurum,  setSyncDurum]  = useState('bos')
 
-  const debounceRef = useRef(null)
+  // ── Auth değişikliğini dinle ──────────────────
+  useEffect(() => {
+    const { data: { subscription } } = onAuthChange((u) => {
+      setUser(u)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
-  // ── Veri Yükle ──
+  // ── Kullanıcı girince veriyi yükle ───────────
+  useEffect(() => {
+    if (user) {
+      yukle()
+      const unsub = realtimeAbone()
+      return unsub
+    } else if (user === null) {
+      setNotlar([])
+      setOgrenciler([])
+    }
+  }, [user])
+
+  // ── Veri Yükle ───────────────────────────────
   const yukle = useCallback(async () => {
-    setSyncDurum('yukleniyor')
+    setYukleniyor(true)
     try {
-      const data = await fetchData()
-      const n = data.notlar     || []
-      const o = data.ogrenciler || []
+      const [n, o] = await Promise.all([fetchNotlar(), fetchOgrenciler()])
       setNotlar(n)
       setOgrenciler(o)
-      saveLocalBackup({ notlar: n, ogrenciler: o })
-      setSyncDurum('tamam')
-      setTimeout(() => setSyncDurum('bos'), 2000)
-    } catch (_) {
-      const backup = loadLocalBackup()
-      if (backup) {
-        setNotlar(backup.notlar     || [])
-        setOgrenciler(backup.ogrenciler || [])
-      }
-      setSyncDurum('hata')
-      setTimeout(() => setSyncDurum('bos'), 3000)
+    } catch (e) {
+      console.error('Yükleme hatası:', e)
+    } finally {
+      setYukleniyor(false)
     }
   }, [])
 
-  // ── Debounced Save ── (600ms — art arda değişikliklerde tek istek)
-  const save = useCallback((yeniNotlar, yeniOgrenciler) => {
-    const n = yeniNotlar     ?? notlar
-    const o = yeniOgrenciler ?? ogrenciler
-    saveLocalBackup({ notlar: n, ogrenciler: o })
+  // ── Realtime Abonelikler ──────────────────────
+  const realtimeAbone = useCallback(() => {
+    const channel = supabase
+      .channel('db-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notlar' },
+        payload => setNotlar(prev => [payload.new, ...prev]))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notlar' },
+        payload => setNotlar(prev => prev.map(n => n.id === payload.new.id ? payload.new : n)))
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'notlar' },
+        payload => setNotlar(prev => prev.filter(n => n.id !== payload.old.id)))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ogrenciler' }, yukle)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'dersler' }, yukle)
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
+  }, [yukle])
+
+  // ── Sync badge yardımcısı ─────────────────────
+  const withSync = useCallback(async (fn) => {
     setSyncDurum('yukleniyor')
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(async () => {
-      try {
-        await saveData({ notlar: n, ogrenciler: o })
-        setSyncDurum('tamam')
-        setTimeout(() => setSyncDurum('bos'), 2000)
-      } catch (_) {
-        setSyncDurum('hata')
-        setTimeout(() => setSyncDurum('bos'), 3000)
-      }
-    }, 600)
-  }, [notlar, ogrenciler])
+    try {
+      const result = await fn()
+      setSyncDurum('tamam')
+      setTimeout(() => setSyncDurum('bos'), 2000)
+      return result
+    } catch (e) {
+      setSyncDurum('hata')
+      setTimeout(() => setSyncDurum('bos'), 3000)
+      throw e
+    }
+  }, [])
 
-  // ── Not İşlemleri ──
-  const notEkle = useCallback((not) => {
-    const yeni = [...notlar, { ...not, id: Date.now(), tarih: new Date().toLocaleDateString('tr-TR') }]
-    setNotlar(yeni)
-    save(yeni, null)
-  }, [notlar, save])
+  // ── NOT İŞLEMLERİ ────────────────────────────
+  const notEkle = useCallback(async (not) => {
+    await withSync(() => insertNot({
+      ...not,
+      user_id: user.id,
+      tarih: new Date().toLocaleDateString('tr-TR'),
+    }))
+  }, [user, withSync])
 
-  const notGuncelle = useCallback((id, guncelleme) => {
-    const yeni = notlar.map(n => n.id === id ? { ...n, ...guncelleme } : n)
-    setNotlar(yeni)
-    save(yeni, null)
-  }, [notlar, save])
+  const notGuncelle = useCallback(async (id, changes) => {
+    await withSync(() => updateNot(id, changes))
+  }, [withSync])
 
-  const notSil = useCallback((id) => {
-    const yeni = notlar.filter(n => n.id !== id)
-    setNotlar(yeni)
-    save(yeni, null)
-  }, [notlar, save])
+  const notSil = useCallback(async (id) => {
+    await withSync(() => deleteNot(id))
+  }, [withSync])
 
-  // ── Öğrenci İşlemleri ──
-  const ogEkle = useCallback((og) => {
-    const yeni = [...ogrenciler, { ...og, id: Date.now(), adres: '', ucret: 0, dersler: [] }]
-    setOgrenciler(yeni)
-    save(null, yeni)
-  }, [ogrenciler, save])
+  // ── ÖĞRENCİ İŞLEMLERİ ───────────────────────
+  const ogEkle = useCallback(async (og) => {
+    await withSync(() => insertOgrenci({ ...og, user_id: user.id, adres: '', ucret: 0 }))
+    await yukle()
+  }, [user, withSync, yukle])
 
-  const ogGuncelle = useCallback((id, guncelleme) => {
-    const yeni = ogrenciler.map(o => o.id === id ? { ...o, ...guncelleme } : o)
-    setOgrenciler(yeni)
-    save(null, yeni)
-  }, [ogrenciler, save])
+  const ogGuncelle = useCallback(async (id, changes) => {
+    await withSync(() => updateOgrenci(id, changes))
+    await yukle()
+  }, [withSync, yukle])
 
-  const ogSil = useCallback((id) => {
-    const yeni = ogrenciler.filter(o => o.id !== id)
-    setOgrenciler(yeni)
-    save(null, yeni)
-  }, [ogrenciler, save])
+  const ogSil = useCallback(async (id) => {
+    await withSync(() => deleteOgrenci(id))
+    await yukle()
+  }, [withSync, yukle])
 
-  // ── Ders İşlemleri (öğrenciye bağlı) ──
-  const dersEkle = useCallback((ogId, ders) => {
-    const yeni = ogrenciler.map(o =>
-      o.id === ogId
-        ? { ...o, dersler: [...(o.dersler || []), { ...ders, id: Date.now(), odendi: false }] }
-        : o
-    )
-    setOgrenciler(yeni)
-    save(null, yeni)
-  }, [ogrenciler, save])
+  // ── DERS İŞLEMLERİ ───────────────────────────
+  const dersEkle = useCallback(async (ogId, ders) => {
+    await withSync(() => insertDers({ ...ders, ogrenci_id: ogId, user_id: user.id }))
+    await yukle()
+  }, [user, withSync, yukle])
 
-  const dersSil = useCallback((ogId, dersId) => {
-    const yeni = ogrenciler.map(o =>
-      o.id === ogId
-        ? { ...o, dersler: (o.dersler || []).filter(d => d.id !== dersId) }
-        : o
-    )
-    setOgrenciler(yeni)
-    save(null, yeni)
-  }, [ogrenciler, save])
+  const dersSil = useCallback(async (_ogId, dersId) => {
+    await withSync(() => deleteDers(dersId))
+    await yukle()
+  }, [withSync, yukle])
 
-  const odemeToggle = useCallback((ogId, dersId) => {
-    const yeni = ogrenciler.map(o =>
-      o.id === ogId
-        ? { ...o, dersler: (o.dersler || []).map(d => d.id === dersId ? { ...d, odendi: !d.odendi } : d) }
-        : o
-    )
-    setOgrenciler(yeni)
-    save(null, yeni)
-  }, [ogrenciler, save])
+  const odemeToggle = useCallback(async (ogId, dersId) => {
+    const og   = ogrenciler.find(o => o.id === ogId)
+    const ders = og?.dersler?.find(d => d.id === dersId)
+    if (!ders) return
+    await withSync(() => updateDers(dersId, { odendi: !ders.odendi }))
+    await yukle()
+  }, [ogrenciler, withSync, yukle])
 
   return (
     <AppContext.Provider value={{
+      user, yukleniyor,
       notlar, ogrenciler, syncDurum,
       yukle,
       notEkle, notGuncelle, notSil,

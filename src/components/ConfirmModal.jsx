@@ -1,6 +1,11 @@
 import React from 'react'
 
-export default function ConfirmModal({ visible, title, message, onConfirm, onCancel }) {
+export default function ConfirmModal({
+  visible, title, message,
+  confirmLabel = 'Evet, Sil',
+  confirmClass = 'bg-accent',
+  onConfirm, onCancel
+}) {
   if (!visible) return null
   return (
     <div
@@ -17,15 +22,11 @@ export default function ConfirmModal({ visible, title, message, onConfirm, onCan
           <button
             onClick={onCancel}
             className="flex-1 py-3 rounded-xl font-extrabold text-sm text-muted bg-appbg border border-border"
-          >
-            Vazgeç
-          </button>
+          >Vazgeç</button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 rounded-xl font-extrabold text-sm text-white bg-accent"
-          >
-            Evet, Sil
-          </button>
+            className={`flex-1 py-3 rounded-xl font-extrabold text-sm text-white ${confirmClass}`}
+          >{confirmLabel}</button>
         </div>
       </div>
     </div>
