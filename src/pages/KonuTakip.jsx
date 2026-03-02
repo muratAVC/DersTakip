@@ -1,35 +1,81 @@
 import React, { useState } from 'react'
 import { useApp } from '../context/AppContext'
+import config from '../config'
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
 import ConfirmModal from '../components/ConfirmModal'
 
-const SINIFLAR = ['9. Sınıf', '10. Sınıf', '11. Sınıf', '12. Sınıf', 'Mezun']
+const SINIFLAR = config.siniflar
 
 export default function KonuTakip() {
   const { notlar, notEkle, notGuncelle, notSil } = useApp()
   const { toast, showToast } = useToast()
 
-  const [sinif,   setSinif]   = useState('')
-  const [ders,    setDers]    = useState('')
-  const [konu,    setKonu]    = useState('')
-  const [editId,  setEditId]  = useState(null)
-  const [filtre,  setFiltre]  = useState('tumu')
-  const [silId,   setSilId]   = useState(null)
+  const [sinif,        setSinif]        = useState('')
+  const [ders,         setDers]         = useState('')
+  const [konu,         setKonu]         = useState('')
+  const [editId,       setEditId]       = useState(null)
+  const [filtre,       setFiltre]       = useState('tumu')
+  const [silId,        setSilId]        = useState(null)
+  const [mukerrerNot,  setMukerrerNot]  = useState(null) // mükerrer bulunan kayıt
+  const [mukerrerModal,setMukerrerModal] = useState(false)
 
   const tumSiniflar = [...new Set(notlar.map(n => n.sinif))].sort()
 
   const handleKaydet = () => {
     if (!sinif || !konu.trim()) { showToast('⚠️ Sınıf ve konu zorunlu!'); return }
+
+    // Düzenleme modunda mükerrer kontrolü — kendi kaydı hariç
     if (editId !== null) {
+      const mukerrer = notlar.find(n =>
+        n.id !== editId &&
+        n.sinif === sinif &&
+        (n.ders || '').trim().toLowerCase() === (ders || '').trim().toLowerCase()
+      )
+      if (mukerrer) {
+        setMukerrerNot(mukerrer)
+        setMukerrerModal(true)
+        return
+      }
       notGuncelle(editId, { sinif, ders, konu })
       showToast('✅ Güncellendi')
       setEditId(null)
-    } else {
-      notEkle({ sinif, ders, konu })
-      showToast('✅ Eklendi')
+      setSinif(''); setDers(''); setKonu('')
+      return
     }
+
+    // Yeni kayıtta mükerrer kontrolü — aynı sınıf + derslik kombinasyonu
+    const mukerrer = notlar.find(n =>
+      n.sinif === sinif &&
+      (n.ders || '').trim().toLowerCase() === (ders || '').trim().toLowerCase()
+    )
+    if (mukerrer) {
+      setMukerrerNot(mukerrer)
+      setMukerrerModal(true)
+      return
+    }
+
+    notEkle({ sinif, ders, konu })
+    showToast('✅ Eklendi')
     setSinif(''); setDers(''); setKonu('')
+  }
+
+  // Mükerrer uyarısında "Düzenle" seçilirse o kaydı düzenleme moduna al
+  const handleMukerrerDuzenle = () => {
+    if (!mukerrerNot) return
+    handleDuzenle(mukerrerNot)
+    setMukerrerModal(false)
+    setMukerrerNot(null)
+    // Girilen konu bilgisini koru — kullanıcı onu düzenlemeye devam edebilsin
+  }
+
+  // Mükerrer uyarısında "Yine de Ekle" seçilirse kontrolü geç
+  const handleMukerrerDevam = () => {
+    notEkle({ sinif, ders, konu })
+    showToast('✅ Eklendi')
+    setSinif(''); setDers(''); setKonu('')
+    setMukerrerModal(false)
+    setMukerrerNot(null)
   }
 
   const handleDuzenle = (not) => {
@@ -148,6 +194,7 @@ export default function KonuTakip() {
         )}
       </div>
 
+      {/* SİL MODAL */}
       <ConfirmModal
         visible={!!silId}
         title="🗑️ Notu Sil"
@@ -155,6 +202,45 @@ export default function KonuTakip() {
         onConfirm={() => { notSil(silId); setSilId(null); showToast('🗑️ Silindi') }}
         onCancel={() => setSilId(null)}
       />
+
+      {/* MÜKERRER KAYIT MODAL */}
+      {mukerrerModal && mukerrerNot && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-end justify-center p-4"
+          onClick={() => setMukerrerModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-5 w-full max-w-[400px] modal-up"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="text-base font-black text-textmain mb-1">⚠️ Bu Sınıf Zaten Kayıtlı</div>
+            <div className="text-xs font-semibold text-muted mb-3">
+              <span className="font-black text-primary">{mukerrerNot.sinif}</span>
+              {mukerrerNot.ders ? <span> · <span className="font-black text-primary">{mukerrerNot.ders}</span></span> : ''} için zaten bir kayıt var:
+            </div>
+            <div className="bg-appbg rounded-xl px-3 py-2.5 mb-4 border border-border">
+              <div className="text-xs text-muted font-semibold mb-0.5">Mevcut konu:</div>
+              <div className="text-sm font-bold text-textmain">{mukerrerNot.konu}</div>
+              {mukerrerNot.tarih && <div className="text-[10px] text-muted mt-1">{mukerrerNot.tarih}</div>}
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleMukerrerDuzenle}
+                className="w-full py-3 rounded-xl font-extrabold text-sm text-white bg-success"
+              >✏️ Mevcut Kaydı Düzenle</button>
+              <button
+                onClick={handleMukerrerDevam}
+                className="w-full py-3 rounded-xl font-extrabold text-sm text-primary bg-[#EEF2FF] border border-[#C7D2FE]"
+              >➕ Yine de Yeni Kayıt Ekle</button>
+              <button
+                onClick={() => setMukerrerModal(false)}
+                className="w-full py-2.5 rounded-xl font-extrabold text-sm text-muted bg-appbg border border-border"
+              >Vazgeç</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Toast visible={toast.visible} msg={toast.msg} />
     </div>
   )

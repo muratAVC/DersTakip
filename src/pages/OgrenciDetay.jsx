@@ -1,17 +1,18 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import config from '../config'
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
 import ConfirmModal from '../components/ConfirmModal'
 
-const SINIFLAR = ['9. Sınıf', '10. Sınıf', '11. Sınıf', '12. Sınıf', 'Mezun']
-const SURELER  = ['1', '1.5', '2', '2.5', '3']
+const SINIFLAR = config.siniflar
+const SURELER  = config.sureler
 
 export default function OgrenciDetay() {
   const { id }    = useParams()
   const navigate  = useNavigate()
-  const { ogrenciler, ogGuncelle, ogSil, dersEkle, dersSil, odemeToggle } = useApp()
+  const { ogrenciler, yukleniyor, ogGuncelle, ogSil, dersEkle, dersSil, odemeToggle } = useApp()
   const { toast, showToast } = useToast()
 
   const og = ogrenciler.find(o => String(o.id) === String(id))
@@ -31,9 +32,20 @@ export default function OgrenciDetay() {
   // Modal state
   const [modalConfig, setModalConfig] = useState(null) // { title, message, onConfirm }
 
+  if (yukleniyor && !og) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-3 animate-pulse">👨‍🎓</div>
+          <div className="text-sm font-bold text-muted">Yükleniyor...</div>
+        </div>
+      </div>
+    )
+  }
+
   if (!og) {
     return (
-      <div className="flex flex-col flex-1 items-center justify-center text-muted">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-muted">
         <div className="text-4xl mb-2">😕</div>
         <div className="text-sm font-semibold">Öğrenci bulunamadı</div>
         <button onClick={() => navigate('/ogrenci')} className="mt-4 text-primary font-bold text-sm">← Geri Dön</button>

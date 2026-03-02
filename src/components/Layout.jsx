@@ -2,7 +2,10 @@ import React, { useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { signOut } from '../services/supabase'
+import { useProfil } from '../hooks/useProfil'
 import ConfirmModal from './ConfirmModal'
+import ProfilKurulum from './ProfilKurulum'
+import config from '../config'
 
 const syncStyle = {
   bos:        'bg-white/20',
@@ -18,9 +21,16 @@ const syncLabel = {
 
 export default function Layout({ children }) {
   const { user, notlar, syncDurum } = useApp()
-  const location   = useLocation()
-  const onKonu     = location.pathname === '/' || location.pathname === '/konu'
-  const [cikisModal, setCikisModal] = useState(false)
+  const { profil, profilHazir, profilKaydet } = useProfil()
+  const location = useLocation()
+  const onKonu   = location.pathname === '/' || location.pathname === '/konu'
+
+  const [cikisModal,   setCikisModal]   = useState(false)
+  const [profilModal,  setProfilModal]  = useState(false)
+
+  const badgeText = syncDurum !== 'bos'
+    ? syncLabel[syncDurum]
+    : onKonu ? `${notlar.length} kayıt` : '—'
 
   const tabs = [
     { to: '/konu',    label: '📝 Konu Takip' },
@@ -28,36 +38,54 @@ export default function Layout({ children }) {
     { to: '/program', label: '🗓️ Program' },
   ]
 
-  const badgeText = syncDurum !== 'bos'
-    ? syncLabel[syncDurum]
-    : onKonu ? `${notlar.length} kayıt` : '—'
-
   return (
     <div className="flex justify-center min-h-screen bg-appbg">
       <div className="w-full max-w-[430px] bg-white min-h-screen flex flex-col">
 
         {/* HEADER */}
-        <div className="bg-gradient-to-br from-primary to-primaryL px-4 py-2 flex items-center justify-between flex-shrink-0">
-          <div>
-            <div className="text-white font-black text-base leading-tight">📚 Ders Takip</div>
-            <div className="text-white/60 text-[10px] font-bold tracking-wide">by Mergen</div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Sync badge */}
-            <div className={`text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full transition-all ${syncStyle[syncDurum]}`}>
-              {badgeText}
+        <div className="bg-gradient-to-br from-primary to-primaryL px-4 pt-2.5 pb-2 flex-shrink-0">
+          <div className="flex items-center justify-between mb-1.5">
+            {/* Sol: uygulama adı */}
+            <div>
+              <div className="text-white font-black text-base leading-tight">
+                📚 {config.appName}
+              </div>
+              <div className="text-white/60 text-[10px] font-bold tracking-wide">
+                by {config.producer}
+              </div>
             </div>
 
-            {/* Kullanıcı + Çıkış */}
-            <button
-              onClick={() => setCikisModal(true)}
-              title={user?.email}
-              className="bg-white/20 hover:bg-white/30 transition-colors w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-black"
-            >
-              {user?.email?.[0]?.toUpperCase() ?? '?'}
-            </button>
+            {/* Sağ: sync badge + kullanıcı butonu */}
+            <div className="flex items-center gap-2">
+              <div className={`text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full transition-all ${syncStyle[syncDurum]}`}>
+                {badgeText}
+              </div>
+              <button
+                onClick={() => setCikisModal(true)}
+                title={user?.email}
+                className="bg-white/20 hover:bg-white/30 transition-colors w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-black"
+              >
+                {user?.email?.[0]?.toUpperCase() ?? '?'}
+              </button>
+            </div>
           </div>
+
+          {/* Profil satırı */}
+          {profilHazir && profil && (
+            <button
+              onClick={() => setProfilModal(true)}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors rounded-xl px-3 py-1.5 w-full text-left"
+            >
+              <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-white text-[11px] font-black flex-shrink-0">
+                {profil.ad[0]?.toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-white text-[12px] font-extrabold truncate block leading-tight">{profil.ad}</span>
+                <span className="text-white/65 text-[10px] font-semibold">{profil.brans}</span>
+              </div>
+              <span className="text-white/50 text-[10px] font-bold">Düzenle</span>
+            </button>
+          )}
         </div>
 
         {/* TAB BAR */}
@@ -93,6 +121,15 @@ export default function Layout({ children }) {
         onConfirm={() => { signOut(); setCikisModal(false) }}
         onCancel={() => setCikisModal(false)}
       />
+
+      {/* PROFİL DÜZENLE MODAL */}
+      {profilModal && (
+        <ProfilKurulum
+          mevcutProfil={profil}
+          onKaydet={(p) => { profilKaydet(p); setProfilModal(false) }}
+          onKapat={() => setProfilModal(false)}
+        />
+      )}
     </div>
   )
 }

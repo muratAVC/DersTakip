@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import config from '../config'
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
 
-const SINIFLAR = ['9. Sınıf', '10. Sınıf', '11. Sınıf', '12. Sınıf', 'Mezun']
+const SINIFLAR = config.siniflar
 
 export default function OgrenciListesi() {
   const { ogrenciler, ogEkle } = useApp()

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
+import config from '../config'
 import { uploadProgram, deleteProgram, getProgramUrl } from '../services/supabase'
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'

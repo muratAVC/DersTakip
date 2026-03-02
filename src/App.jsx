@@ -1,19 +1,19 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider, useApp } from './context/AppContext'
-import Layout         from './components/Layout'
-import Login          from './pages/Login'
-import KonuTakip      from './pages/KonuTakip'
-import OgrenciListesi from './pages/OgrenciListesi'
-import OgrenciDetay   from './pages/OgrenciDetay'
-import DersProgrami   from './pages/DersProgrami'
+import { useProfil } from './hooks/useProfil'
+import Layout           from './components/Layout'
+import ProfilKurulum    from './components/ProfilKurulum'
+import Login            from './pages/Login'
+import KonuTakip        from './pages/KonuTakip'
+import OgrenciListesi   from './pages/OgrenciListesi'
+import OgrenciDetay     from './pages/OgrenciDetay'
+import DersProgrami     from './pages/DersProgrami'
 
 // ── Auth Guard ──────────────────────────────────────────
-// user === undefined → henüz kontrol ediliyor (loading)
-// user === null      → giriş yapılmamış → Login'e yönlendir
-// user === {...}     → giriş yapılmış → sayfayı göster
 function AuthGuard({ children }) {
   const { user } = useApp()
+  const { profil, profilHazir, profilKaydet } = useProfil()
 
   if (user === undefined) {
     return (
@@ -27,6 +27,18 @@ function AuthGuard({ children }) {
   }
 
   if (user === null) return <Navigate to="/login" replace />
+
+  // Giriş yapılmış ama profil henüz kurulmamış → kurulum ekranı
+  if (profilHazir && !profil) {
+    return (
+      <ProfilKurulum
+        mevcutProfil={null}
+        onKaydet={profilKaydet}
+        onKapat={() => {}} // ilk kurulumda kapatma yok
+      />
+    )
+  }
+
   return children
 }
 
@@ -41,12 +53,10 @@ function GuestGuard({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Giriş sayfası — sadece çıkış yapmış kullanıcılar */}
       <Route path="/login" element={
         <GuestGuard><Login /></GuestGuard>
       } />
 
-      {/* Korumalı sayfalar — giriş zorunlu */}
       <Route path="/" element={
         <AuthGuard><Layout><KonuTakip /></Layout></AuthGuard>
       } />
